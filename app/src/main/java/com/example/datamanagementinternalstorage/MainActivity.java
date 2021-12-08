@@ -2,11 +2,14 @@ package com.example.datamanagementinternalstorage;
 
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -16,68 +19,85 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
 public class MainActivity extends AppCompatActivity {
-    private String fileName = "data.txt";
+    private String fileName = "data";
+    private EditText editText;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        // Check whether fileName already exists in directory used
-        // by the openFileOutput() method.
-        // If the text file doesn't exist, then create it now
-
-        if (!getFileStreamPath(fileName).exists()) {
-
-            try {
-
-                writeFile();
-
-            } catch (FileNotFoundException e) {
-                Toast.makeText(this, "FileNotFoundException", Toast.LENGTH_SHORT).show();
-            }
-        }
-
-
-        // Read the data from the text file and display it
-        try {
-
-            readFile();
-
-        } catch (IOException e) {
-            Toast.makeText(this, "IOException", Toast.LENGTH_SHORT).show();
-        }
-
+        editText = findViewById(R.id.editText);
     }
 
-    private void writeFile() throws FileNotFoundException {
+    private void writeToFile(File file) throws IOException {
+        FileOutputStream fos = new FileOutputStream(file);
+        PrintWriter pw = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fos)));
 
-        FileOutputStream fos = openFileOutput(fileName, MODE_PRIVATE);
-
-        PrintWriter pw = new PrintWriter(new BufferedWriter(
-                new OutputStreamWriter(fos)));
-
-        pw.println("Line 1: This is a test of the File Writing API");
-        pw.println("Line 2: This is a test of the File Writing API");
-        pw.println("Line 3: This is a test of the File Writing API");
-
+        pw.println(editText.getText().toString());
         pw.close();
 
     }
 
-    private void readFile() throws IOException {
-
-        FileInputStream fis = openFileInput(fileName);
+    private void readFromFile(File file) throws IOException {
+        FileInputStream fis = new FileInputStream(file);
         BufferedReader br = new BufferedReader(new InputStreamReader(fis));
 
         String line = "";
-
         while (null != (line = br.readLine())) {
-
-            TextView tv = findViewById(R.id.fileOutTV);
-            tv.append(line+"\n");
-
+            editText.append(line);
         }
-
         br.close();
-
     }
+
+    public void filesWBClicked(View v){
+        try {
+            File file = new File(getFilesDir(), fileName);
+            writeToFile(file);
+        } catch (IOException e) {
+            Toast.makeText(this, "FileNotFoundException", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void cacheWBClicked(View v){
+        try {
+            File file = new File(getCacheDir(), fileName);
+            writeToFile(file);
+        } catch (IOException e) {
+            Toast.makeText(this, "FileNotFoundException", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void filesRBClicked(View v){
+        try {
+            File file = new File(getFilesDir(), fileName);
+            readFromFile(file);
+        } catch (IOException e) {
+            Toast.makeText(this, "IOException"+e.toString(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void cacheRBClicked(View v){
+        try {
+            File file = new File(getCacheDir(), fileName);
+            readFromFile(file);
+        } catch (IOException e) {
+            Toast.makeText(this, "IOException"+e.toString(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void resetBClicked(View v){
+        editText.setText("");
+    }
+
+    public void delBClicked(View v){
+        File cacheDir = getCacheDir();
+        for(File file:cacheDir.listFiles()){
+            file.delete();
+        }
+        File filesDir = getFilesDir();
+        for(File file:filesDir.listFiles()){
+            file.delete();
+        }
+        Toast.makeText(this, "All files deleted from internal storage", Toast.LENGTH_SHORT).show();
+    }
+
 }
